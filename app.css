@@ -1,0 +1,157 @@
+:root {
+  --itc-green: #0b3d2e;
+  --itc-green-dark: #072a20;
+  --itc-gold: #c8a24a;
+  --itc-cream: #f7f4ee;
+  --itc-ink: #1c1c1a;
+  --itc-border: #dfd9c8;
+  --radius: 10px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
+  background: var(--itc-cream);
+  color: var(--itc-ink);
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  background: var(--itc-green);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.brand { display: flex; align-items: center; gap: 14px; }
+
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--itc-gold);
+  color: var(--itc-green-dark);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.brand-text { display: flex; flex-direction: column; line-height: 1.25; }
+.brand-text strong { font-size: 15px; }
+.brand-text span { font-size: 12px; color: #d9e4dc; }
+
+.btn {
+  border: none;
+  border-radius: var(--radius);
+  padding: 9px 16px;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.btn-primary { background: var(--itc-gold); color: var(--itc-green-dark); }
+.btn-primary:hover { filter: brightness(1.05); }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-ghost { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.4); margin-left: 10px; }
+
+.signed-in-info { display: flex; align-items: center; font-size: 13px; }
+
+.signed-out-panel {
+  max-width: 640px;
+  margin: 90px auto;
+  text-align: center;
+  padding: 0 24px;
+}
+.signed-out-panel h1 { font-size: 26px; color: var(--itc-green); margin-bottom: 12px; }
+.signed-out-panel p { color: #4a4a45; line-height: 1.6; }
+
+.app {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 20px;
+  max-width: 1100px;
+  margin: 24px auto;
+  padding: 0 20px;
+  height: calc(100vh - 160px);
+}
+
+.sidebar {
+  background: #fff;
+  border: 1px solid var(--itc-border);
+  border-radius: var(--radius);
+  padding: 18px;
+  overflow-y: auto;
+}
+.sidebar h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.6px; color: #6b6b63; margin: 0 0 12px; }
+.starter {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--itc-cream);
+  border: 1px solid var(--itc-border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--itc-ink);
+}
+.starter:hover { background: #eee7d6; }
+.sidebar-note { font-size: 12px; color: #7a7a70; line-height: 1.5; margin-top: 16px; }
+
+.chat-panel {
+  background: #fff;
+  border: 1px solid var(--itc-border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.msg { max-width: 75%; padding: 12px 14px; border-radius: 12px; line-height: 1.5; font-size: 14px; white-space: pre-wrap; }
+.msg.user { align-self: flex-end; background: var(--itc-green); color: #fff; border-bottom-right-radius: 2px; }
+.msg.assistant { align-self: flex-start; background: var(--itc-cream); border: 1px solid var(--itc-border); border-bottom-left-radius: 2px; }
+.msg.error { align-self: center; background: #fde8e8; border: 1px solid #f3b4b4; color: #7a1f1f; }
+.msg.pending { align-self: flex-start; color: #8a8a80; font-style: italic; background: transparent; border: none; }
+
+.composer {
+  display: flex;
+  gap: 10px;
+  padding: 14px;
+  border-top: 1px solid var(--itc-border);
+}
+.composer textarea {
+  flex: 1;
+  resize: none;
+  border: 1px solid var(--itc-border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  max-height: 120px;
+}
+
+.footer {
+  text-align: center;
+  font-size: 12px;
+  color: #8a8a80;
+  padding: 18px;
+}
+
+@media (max-width: 720px) {
+  .app { grid-template-columns: 1fr; height: auto; }
+}

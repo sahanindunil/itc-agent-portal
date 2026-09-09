@@ -1,0 +1,10 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "",
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "FOUNDRY_PROJECT_ENDPOINT": "https://itc-ai-agent-resource.services.ai.azure.com/api/projects/itc-ai-agent",
+    "FOUNDRY_AGENT_NAME": "2a3c5a1f-9459-407e-8305-ae17fa4fc540",
+    "FOUNDRY_AGENT_VERSION": ""
+  }
+}
