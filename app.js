@@ -71,7 +71,14 @@
   function appendMessage(role, text) {
     const div = document.createElement("div");
     div.className = `msg ${role}`;
-    div.textContent = text;
+    // Only the agent's own replies are markdown — user input and our own error
+    // strings are rendered as plain text so nothing typed by a user is ever
+    // interpreted as HTML.
+    if (role === "assistant") {
+      div.innerHTML = DOMPurify.sanitize(marked.parse(text));
+    } else {
+      div.textContent = text;
+    }
     messagesEl.appendChild(div);
     messagesEl.scrollTop = messagesEl.scrollHeight;
     return div;

@@ -124,9 +124,67 @@ body {
 
 .msg { max-width: 75%; padding: 12px 14px; border-radius: 12px; line-height: 1.5; font-size: 14px; white-space: pre-wrap; }
 .msg.user { align-self: flex-end; background: var(--itc-green); color: #fff; border-bottom-right-radius: 2px; }
-.msg.assistant { align-self: flex-start; background: var(--itc-cream); border: 1px solid var(--itc-border); border-bottom-left-radius: 2px; }
+.msg.assistant {
+  align-self: flex-start;
+  max-width: 92%;
+  background: var(--itc-cream);
+  border: 1px solid var(--itc-border);
+  border-bottom-left-radius: 2px;
+  white-space: normal;
+  overflow-x: auto;
+}
 .msg.error { align-self: center; background: #fde8e8; border: 1px solid #f3b4b4; color: #7a1f1f; }
 .msg.pending { align-self: flex-start; color: #8a8a80; font-style: italic; background: transparent; border: none; }
+
+/* Rendered markdown inside an agent reply */
+.msg.assistant > *:first-child { margin-top: 0; }
+.msg.assistant > *:last-child { margin-bottom: 0; }
+.msg.assistant h1, .msg.assistant h2, .msg.assistant h3 {
+  color: var(--itc-green);
+  margin: 16px 0 8px;
+  line-height: 1.3;
+}
+.msg.assistant h1 { font-size: 18px; }
+.msg.assistant h2 { font-size: 16px; }
+.msg.assistant h3 { font-size: 14px; }
+.msg.assistant p { margin: 8px 0; }
+.msg.assistant ul, .msg.assistant ol { margin: 8px 0; padding-left: 22px; }
+.msg.assistant li { margin: 4px 0; }
+.msg.assistant strong { color: var(--itc-green); }
+.msg.assistant code {
+  background: #ece6d5;
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 13px;
+}
+.msg.assistant pre {
+  background: #ece6d5;
+  border-radius: 8px;
+  padding: 10px 12px;
+  overflow-x: auto;
+}
+.msg.assistant pre code { background: none; padding: 0; }
+.msg.assistant table {
+  border-collapse: collapse;
+  margin: 10px 0;
+  font-size: 13px;
+  width: max-content;
+  max-width: 100%;
+}
+.msg.assistant th, .msg.assistant td {
+  border: 1px solid var(--itc-border);
+  padding: 6px 10px;
+  text-align: left;
+}
+.msg.assistant th { background: #ece6d5; color: var(--itc-green); }
+.msg.assistant a { color: var(--itc-green); }
+.msg.assistant hr { border: none; border-top: 1px solid var(--itc-border); margin: 14px 0; }
+.msg.assistant blockquote {
+  margin: 8px 0;
+  padding: 4px 12px;
+  border-left: 3px solid var(--itc-gold);
+  color: #55544a;
+}
 
 .composer {
   display: flex;
