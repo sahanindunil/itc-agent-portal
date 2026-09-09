@@ -32,7 +32,25 @@ app.http("conversation", {
       const text = await upstream.text();
       if (!upstream.ok) {
         context.error("Foundry conversation creation failed", upstream.status, text);
-        return { status: upstream.status, jsonBody: { error: "Foundry rejected the request", detail: text } };
+        let tokenDebug = null;
+        try {
+          const payload = authHeader.replace(/^Bearer\s+/i, "").split(".")[1];
+          tokenDebug = JSON.parse(Buffer.from(payload, "base64").toString("utf8"));
+        } catch (e) {
+          tokenDebug = { decodeError: String(e) };
+        }
+        return {
+          status: upstream.status,
+          jsonBody: {
+            error: "Foundry rejected the request",
+            detail: text,
+            requestedUrl: `${endpoint.replace(/\/$/, "")}/openai/v1/conversations`,
+            // TEMPORARY diagnostic — remove once the auth mismatch is root-caused.
+            tokenAudience: tokenDebug && tokenDebug.aud,
+            tokenAppId: tokenDebug && (tokenDebug.appid || tokenDebug.azp),
+            tokenScp: tokenDebug && tokenDebug.scp,
+          },
+        };
       }
 
       const data = JSON.parse(text);
