@@ -100,6 +100,40 @@
     return conversationId;
   }
 
+  const POLL_INTERVAL_MS = 2500;
+  const POLL_TIMEOUT_MS = 5 * 60 * 1000; // give up after 5 minutes of polling
+
+  function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  // Static Web Apps hard-caps every /api request at 45 seconds, so the backend uses
+  // Foundry's "background" response mode: the first call returns almost immediately
+  // with either the finished answer or an in-progress id, and this polls a separate
+  // lightweight status endpoint (well under 45s per poll) until it's done.
+  async function pollForResult(responseId, pendingEl) {
+    const start = Date.now();
+    while (Date.now() - start < POLL_TIMEOUT_MS) {
+      await sleep(POLL_INTERVAL_MS);
+      const elapsed = Math.round((Date.now() - start) / 1000);
+      pendingEl.textContent = `itc-plus is thinking… (${elapsed}s)`;
+
+      const token = await getAccessToken();
+      const res = await fetch(`/api/message-status?responseId=${encodeURIComponent(responseId)}`, {
+        headers: { "X-Foundry-Authorization": `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`itc-plus could not answer that (HTTP ${res.status}). ${errText}`);
+      }
+
+      const data = await res.json();
+      if (data.done) return data.text || "(no response text returned)";
+    }
+    throw new Error("itc-plus is taking longer than expected — please try again or rephrase the question.");
+  }
+
   async function sendMessage(text) {
     sendBtn.disabled = true;
     appendMessage("user", text);
@@ -118,16 +152,18 @@
         body: JSON.stringify({ conversationId: convId, message: text }),
       });
 
-      pending.remove();
-
       if (!res.ok) {
+        pending.remove();
         const errText = await res.text();
         appendMessage("error", `itc-plus could not answer that (HTTP ${res.status}). ${errText}`);
         return;
       }
 
       const data = await res.json();
-      appendMessage("assistant", data.text || "(no response text returned)");
+      const answer = data.done ? data.text || "(no response text returned)" : await pollForResult(data.responseId, pending);
+
+      pending.remove();
+      appendMessage("assistant", answer);
     } catch (err) {
       pending.remove();
       console.error(err);

@@ -56,6 +56,11 @@ app.http("message", {
       conversation: { id: conversationId },
       input: message,
       stream: false,
+      // Static Web Apps hard-caps every /api request at 45 seconds regardless of plan or
+      // backend type — a slow tool call (e.g. a live data scrape) can easily exceed that.
+      // background:true returns immediately with a status instead of blocking, so the
+      // frontend polls /api/message-status instead of holding one long connection open.
+      background: true,
     };
     if (process.env.FOUNDRY_AGENT_VERSION) {
       requestBody.agent_reference.version = process.env.FOUNDRY_AGENT_VERSION;
@@ -78,10 +83,19 @@ app.http("message", {
       }
 
       const data = JSON.parse(text);
-      return { status: 200, jsonBody: { text: extractText(data), responseId: data.id } };
+      if (data.status === "completed") {
+        return { status: 200, jsonBody: { done: true, text: extractText(data), responseId: data.id } };
+      }
+      if (data.status === "failed" || data.status === "incomplete" || data.status === "cancelled") {
+        return { status: 502, jsonBody: { error: `Foundry response ${data.status}`, detail: text } };
+      }
+      // "queued" or "in_progress" — still running, frontend polls for the result.
+      return { status: 200, jsonBody: { done: false, responseId: data.id } };
     } catch (err) {
       context.error("Error calling agent", err);
       return { status: 502, jsonBody: { error: "Failed to reach Azure AI Foundry", detail: String(err) } };
     }
   },
 });
+
+module.exports = { extractText };
