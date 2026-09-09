@@ -151,6 +151,7 @@ body {
 .msg.assistant:hover .msg-expand { opacity: 1; }
 .msg-expand:hover { color: var(--itc-green); border-color: var(--itc-green); }
 
+.modal-backdrop[hidden] { display: none; }
 .modal-backdrop {
   position: fixed;
   inset: 0;
