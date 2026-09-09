@@ -58,6 +58,12 @@ body {
 .btn-primary:hover { filter: brightness(1.05); }
 .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
 .btn-ghost { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.4); margin-left: 10px; }
+.btn-ghost-light {
+  background: transparent;
+  color: var(--itc-green);
+  border: 1px solid var(--itc-border);
+}
+.btn-ghost-light:hover { background: var(--itc-cream); }
 
 .signed-in-info { display: flex; align-items: center; font-size: 13px; }
 
@@ -111,6 +117,13 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+.chat-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--itc-border);
 }
 
 .messages {

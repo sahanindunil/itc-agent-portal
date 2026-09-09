@@ -20,6 +20,7 @@
   const composer = document.getElementById("composer");
   const composerInput = document.getElementById("composer-input");
   const sendBtn = document.getElementById("send-btn");
+  const newChatBtn = document.getElementById("new-chat-btn");
 
   let account = null;
   let conversationId = null;
@@ -201,6 +202,13 @@
       composerInput.value = btn.dataset.prompt;
       composer.requestSubmit();
     });
+  });
+
+  newChatBtn.addEventListener("click", () => {
+    conversationId = null;
+    messagesEl.innerHTML = "";
+    composerInput.value = "";
+    composerInput.focus();
   });
 
   init();
