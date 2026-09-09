@@ -1,7 +1,0 @@
-{
-  "name": "itc-agent-portal",
-  "private": true,
-  "scripts": {
-    "build": "echo \"static site — nothing to build\""
-  }
-}
