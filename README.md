@@ -29,12 +29,12 @@ az ad app create \
   --sign-in-audience AzureADMyOrg \
   --web-redirect-uris "http://localhost:4280" \
   --required-resource-accesses '[{
-    "resourceAppId": "18a66f5f-dbdf-4c17-9dd7-1634712a9cbe",
-    "resourceAccess": [{"id": "1a7925b5-f871-417a-9b8b-303f9f29fa10", "type": "Scope"}]
+    "resourceAppId": "7d312290-28c8-473c-a0ed-8e53749b6d6d",
+    "resourceAccess": [{"id": "<user_impersonation scope id — add via Portal, see note>", "type": "Scope"}]
   }]'
 ```
 
-The `resourceAppId`/scope `id` above are the well-known, stable IDs for the "Azure Machine Learning Services" first-party resource that backs the `https://ai.azure.com/.default` scope Foundry SDKs use — pulled directly from Microsoft's own [entra-app.bicep](https://github.com/microsoft-foundry/foundry-agent-webapp/blob/main/infra/entra-app.bicep) for this same agent web app template, so they're guaranteed correct for your tenant.
+`7d312290-28c8-473c-a0ed-8e53749b6d6d` is the well-known, stable app ID for **Microsoft Cognitive Services** — the resource that actually backs `https://cognitiveservices.azure.com/.default`, which is the audience this project's endpoint (on the `services.ai.azure.com` hostname) validates against. This is *not* the same as "Azure Machine Learning Services" (`18a66f5f-...`, backing `https://ai.azure.com/.default`) — that's a different, easy-to-confuse first-party resource used by a different Foundry endpoint shape. If the tenant has never requested a Cognitive Services token before, its service principal may not exist yet; the reliable way to provision it without the CLI is to sign into [ai.azure.com](https://ai.azure.com) and open any project once, then add the permission via Portal: **API permissions → Add a permission → APIs my organization uses → search the app ID above → Delegated permissions → `user_impersonation`**.
 
 Then switch the app to a **SPA** platform (the CLI above registers a `web` redirect for simplicity; move it to `spa` so MSAL's auth-code+PKCE flow works without a client secret):
 
