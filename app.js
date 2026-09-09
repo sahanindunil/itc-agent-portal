@@ -22,6 +22,27 @@
   const sendBtn = document.getElementById("send-btn");
   const newChatBtn = document.getElementById("new-chat-btn");
   const historyListEl = document.getElementById("history-list");
+  const modalBackdrop = document.getElementById("modal-backdrop");
+  const modalContent = document.getElementById("modal-content");
+  const modalClose = document.getElementById("modal-close");
+
+  function openModal(html) {
+    modalContent.innerHTML = html;
+    modalBackdrop.hidden = false;
+  }
+
+  function closeModal() {
+    modalBackdrop.hidden = true;
+    modalContent.innerHTML = "";
+  }
+
+  modalClose.addEventListener("click", closeModal);
+  modalBackdrop.addEventListener("click", (e) => {
+    if (e.target === modalBackdrop) closeModal();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !modalBackdrop.hidden) closeModal();
+  });
 
   let account = null;
   let conversationId = null;
@@ -171,7 +192,15 @@
     // strings are rendered as plain text so nothing typed by a user is ever
     // interpreted as HTML.
     if (role === "assistant") {
-      div.innerHTML = DOMPurify.sanitize(marked.parse(text));
+      const html = DOMPurify.sanitize(marked.parse(text));
+      div.innerHTML = html;
+      const expandBtn = document.createElement("button");
+      expandBtn.type = "button";
+      expandBtn.className = "msg-expand";
+      expandBtn.title = "View fullscreen";
+      expandBtn.textContent = "⤢";
+      expandBtn.addEventListener("click", () => openModal(html));
+      div.appendChild(expandBtn);
     } else {
       div.textContent = text;
     }
