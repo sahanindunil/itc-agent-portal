@@ -21,9 +21,102 @@
   const composerInput = document.getElementById("composer-input");
   const sendBtn = document.getElementById("send-btn");
   const newChatBtn = document.getElementById("new-chat-btn");
+  const historyListEl = document.getElementById("history-list");
 
   let account = null;
   let conversationId = null;
+  let currentSession = null; // { id, title, conversationId, messages: [{role, text}] }
+
+  // Chat history lives in localStorage, namespaced per signed-in account — it's per
+  // device/browser (not synced), which is fine for a demo and needs no backend at all.
+  function historyKey() {
+    return `itc_chat_history_${account.homeAccountId}`;
+  }
+
+  function loadSessions() {
+    try {
+      return JSON.parse(localStorage.getItem(historyKey())) || [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveSessions(sessions) {
+    try {
+      localStorage.setItem(historyKey(), JSON.stringify(sessions.slice(0, 30)));
+    } catch (err) {
+      console.error("Could not save chat history", err);
+    }
+  }
+
+  function upsertCurrentSession() {
+    const sessions = loadSessions().filter((s) => s.id !== currentSession.id);
+    sessions.unshift(currentSession);
+    saveSessions(sessions);
+    renderHistoryList();
+  }
+
+  function renderHistoryList() {
+    const sessions = loadSessions();
+    historyListEl.innerHTML = "";
+    if (sessions.length === 0) {
+      historyListEl.innerHTML = `<p class="history-empty">No previous chats yet.</p>`;
+      return;
+    }
+    for (const session of sessions) {
+      const item = document.createElement("div");
+      item.className = "history-item" + (currentSession && session.id === currentSession.id ? " active" : "");
+
+      const title = document.createElement("span");
+      title.className = "history-item-title";
+      title.textContent = session.title;
+      title.addEventListener("click", () => loadSession(session.id));
+
+      const del = document.createElement("button");
+      del.className = "history-item-delete";
+      del.type = "button";
+      del.title = "Delete this chat";
+      del.textContent = "×";
+      del.addEventListener("click", (e) => {
+        e.stopPropagation();
+        deleteSession(session.id);
+      });
+
+      item.appendChild(title);
+      item.appendChild(del);
+      historyListEl.appendChild(item);
+    }
+  }
+
+  function startNewSession() {
+    currentSession = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      title: "New chat",
+      conversationId: null,
+      messages: [],
+    };
+    conversationId = null;
+    messagesEl.innerHTML = "";
+    renderHistoryList();
+  }
+
+  function loadSession(id) {
+    const sessions = loadSessions();
+    const session = sessions.find((s) => s.id === id);
+    if (!session) return;
+    currentSession = session;
+    conversationId = session.conversationId;
+    messagesEl.innerHTML = "";
+    for (const m of session.messages) appendMessage(m.role, m.text, { persist: false });
+    renderHistoryList();
+  }
+
+  function deleteSession(id) {
+    const sessions = loadSessions().filter((s) => s.id !== id);
+    saveSessions(sessions);
+    if (currentSession && currentSession.id === id) startNewSession();
+    else renderHistoryList();
+  }
 
   function showSignedIn(acc) {
     account = acc;
@@ -33,6 +126,8 @@
     userNameEl.textContent = acc.username;
     app.hidden = false;
     signedOutPanel.hidden = true;
+    startNewSession();
+    renderHistoryList();
   }
 
   function showSignedOut() {
@@ -69,7 +164,7 @@
     }
   }
 
-  function appendMessage(role, text) {
+  function appendMessage(role, text, { persist = true } = {}) {
     const div = document.createElement("div");
     div.className = `msg ${role}`;
     // Only the agent's own replies are markdown — user input and our own error
@@ -82,6 +177,15 @@
     }
     messagesEl.appendChild(div);
     messagesEl.scrollTop = messagesEl.scrollHeight;
+
+    // "pending" bubbles are transient UI only — never saved to history.
+    if (persist && role !== "pending" && currentSession) {
+      currentSession.messages.push({ role, text });
+      if (currentSession.title === "New chat" && role === "user") {
+        currentSession.title = text.length > 42 ? text.slice(0, 42) + "…" : text;
+      }
+      upsertCurrentSession();
+    }
     return div;
   }
 
@@ -98,6 +202,10 @@
     }
     const data = await res.json();
     conversationId = data.id;
+    if (currentSession) {
+      currentSession.conversationId = conversationId;
+      upsertCurrentSession();
+    }
     return conversationId;
   }
 
@@ -205,8 +313,7 @@
   });
 
   newChatBtn.addEventListener("click", () => {
-    conversationId = null;
-    messagesEl.innerHTML = "";
+    startNewSession();
     composerInput.value = "";
     composerInput.focus();
   });
