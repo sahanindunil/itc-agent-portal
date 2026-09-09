@@ -18,6 +18,29 @@ function extractText(payload) {
   return parts.join("\n").trim();
 }
 
+// Best-effort progress labels from whatever partial `output` items Foundry has
+// attached to an in-progress response — schema for this isn't formally documented
+// for agent-routed responses, so this degrades gracefully to an empty list (the
+// frontend just falls back to a plain "thinking…" indicator) rather than erroring.
+const STEP_LABELS = {
+  function_call: (item) => `Calling ${item.name || "a tool"}`,
+  file_search_call: () => "Searching files",
+  web_search_call: () => "Searching the web",
+  code_interpreter_call: () => "Running code",
+  reasoning: () => "Reasoning",
+  mcp_tool_call: (item) => `Calling ${item.name || "a connected tool"}`,
+};
+
+function extractSteps(payload) {
+  const steps = [];
+  for (const item of payload.output || []) {
+    if (!item || item.type === "message") continue;
+    const label = STEP_LABELS[item.type] ? STEP_LABELS[item.type](item) : item.type;
+    steps.push({ label, done: item.status ? item.status === "completed" : true });
+  }
+  return steps;
+}
+
 app.http("message", {
   methods: ["POST"],
   authLevel: "anonymous",
@@ -90,7 +113,7 @@ app.http("message", {
         return { status: 502, jsonBody: { error: `Foundry response ${data.status}`, detail: text } };
       }
       // "queued" or "in_progress" — still running, frontend polls for the result.
-      return { status: 200, jsonBody: { done: false, responseId: data.id } };
+      return { status: 200, jsonBody: { done: false, responseId: data.id, steps: extractSteps(data) } };
     } catch (err) {
       context.error("Error calling agent", err);
       return { status: 502, jsonBody: { error: "Failed to reach Azure AI Foundry", detail: String(err) } };
@@ -98,4 +121,4 @@ app.http("message", {
   },
 });
 
-module.exports = { extractText };
+module.exports = { extractText, extractSteps };

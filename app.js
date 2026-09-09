@@ -245,6 +245,18 @@
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
+  // Renders whatever step info Foundry has exposed for the in-progress response, if
+  // any — schema for this isn't guaranteed, so it gracefully falls back to a plain
+  // elapsed-time indicator when no steps are reported.
+  function renderPending(pendingEl, elapsed, steps) {
+    if (!steps || steps.length === 0) {
+      pendingEl.textContent = `itc-plus is thinking… (${elapsed}s)`;
+      return;
+    }
+    const lines = steps.map((s) => `${s.done ? "✓" : "…"} ${s.label}`);
+    pendingEl.textContent = `itc-plus is working (${elapsed}s)\n${lines.join("\n")}`;
+  }
+
   // Static Web Apps hard-caps every /api request at 45 seconds, so the backend uses
   // Foundry's "background" response mode: the first call returns almost immediately
   // with either the finished answer or an in-progress id, and this polls a separate
@@ -254,7 +266,6 @@
     while (Date.now() - start < POLL_TIMEOUT_MS) {
       await sleep(POLL_INTERVAL_MS);
       const elapsed = Math.round((Date.now() - start) / 1000);
-      pendingEl.textContent = `itc-plus is thinking… (${elapsed}s)`;
 
       const token = await getAccessToken();
       const res = await fetch(`/api/message-status?responseId=${encodeURIComponent(responseId)}`, {
@@ -268,6 +279,7 @@
 
       const data = await res.json();
       if (data.done) return data.text || "(no response text returned)";
+      renderPending(pendingEl, elapsed, data.steps);
     }
     throw new Error("itc-plus is taking longer than expected — please try again or rephrase the question.");
   }

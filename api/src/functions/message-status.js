@@ -1,5 +1,5 @@
 const { app } = require("@azure/functions");
-const { extractText } = require("./message");
+const { extractText, extractSteps } = require("./message");
 
 // Polled by the frontend after a background response (see message.js) comes back
 // "in_progress". Each call is a quick status lookup, so it comfortably stays under
@@ -43,7 +43,7 @@ app.http("message-status", {
       if (data.status === "failed" || data.status === "incomplete" || data.status === "cancelled") {
         return { status: 502, jsonBody: { error: `Foundry response ${data.status}`, detail: text } };
       }
-      return { status: 200, jsonBody: { done: false, responseId: data.id, foundryStatus: data.status } };
+      return { status: 200, jsonBody: { done: false, responseId: data.id, foundryStatus: data.status, steps: extractSteps(data) } };
     } catch (err) {
       context.error("Error checking response status", err);
       return { status: 502, jsonBody: { error: "Failed to reach Azure AI Foundry", detail: String(err) } };
