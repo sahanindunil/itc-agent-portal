@@ -23,9 +23,11 @@ app.http("message", {
   authLevel: "anonymous",
   route: "message",
   handler: async (request, context) => {
-    const authHeader = request.headers.get("authorization");
+    // Not "authorization" — Static Web Apps' managed Functions integration overwrites that
+    // header with its own internal platform token before this handler ever sees it.
+    const authHeader = request.headers.get("x-foundry-authorization");
     if (!authHeader) {
-      return { status: 401, jsonBody: { error: "Missing Authorization header" } };
+      return { status: 401, jsonBody: { error: "Missing X-Foundry-Authorization header" } };
     }
 
     const endpoint = process.env.FOUNDRY_PROJECT_ENDPOINT;

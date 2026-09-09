@@ -81,7 +81,9 @@
     if (conversationId) return conversationId;
     const res = await fetch("/api/conversation", {
       method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
+      // Not "Authorization" — Static Web Apps' managed Functions integration overwrites that
+      // header with its own internal platform token before the function ever sees it.
+      headers: { "X-Foundry-Authorization": `Bearer ${token}` },
     });
     if (!res.ok) {
       throw new Error(`Could not start a conversation (HTTP ${res.status}). ${await res.text()}`);
@@ -104,7 +106,7 @@
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          "X-Foundry-Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({ conversationId: convId, message: text }),
       });

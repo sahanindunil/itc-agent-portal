@@ -9,9 +9,11 @@ app.http("conversation", {
   authLevel: "anonymous",
   route: "conversation",
   handler: async (request, context) => {
-    const authHeader = request.headers.get("authorization");
+    // Not "authorization" — Static Web Apps' managed Functions integration overwrites that
+    // header with its own internal platform token before this handler ever sees it.
+    const authHeader = request.headers.get("x-foundry-authorization");
     if (!authHeader) {
-      return { status: 401, jsonBody: { error: "Missing Authorization header" } };
+      return { status: 401, jsonBody: { error: "Missing X-Foundry-Authorization header" } };
     }
 
     const endpoint = process.env.FOUNDRY_PROJECT_ENDPOINT;
@@ -32,25 +34,7 @@ app.http("conversation", {
       const text = await upstream.text();
       if (!upstream.ok) {
         context.error("Foundry conversation creation failed", upstream.status, text);
-        let tokenDebug = null;
-        try {
-          const payload = authHeader.replace(/^Bearer\s+/i, "").split(".")[1];
-          tokenDebug = JSON.parse(Buffer.from(payload, "base64").toString("utf8"));
-        } catch (e) {
-          tokenDebug = { decodeError: String(e) };
-        }
-        return {
-          status: upstream.status,
-          jsonBody: {
-            error: "Foundry rejected the request",
-            detail: text,
-            requestedUrl: `${endpoint.replace(/\/$/, "")}/openai/v1/conversations`,
-            // TEMPORARY diagnostic — remove once the auth mismatch is root-caused.
-            tokenAudience: tokenDebug && tokenDebug.aud,
-            tokenAppId: tokenDebug && (tokenDebug.appid || tokenDebug.azp),
-            tokenScp: tokenDebug && tokenDebug.scp,
-          },
-        };
+        return { status: upstream.status, jsonBody: { error: "Foundry rejected the request", detail: text } };
       }
 
       const data = JSON.parse(text);

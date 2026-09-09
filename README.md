@@ -16,7 +16,9 @@ Static frontend (index.html / app.js) ── same origin ──▶ /api/* (Azure
                                           RBAC: Foundry Agent Consumer role on your account
 ```
 
-Why a relay function at all, if it's your own token: Azure AI Foundry's data-plane endpoint doesn't return CORS headers for arbitrary browser origins, so a browser calling it directly gets blocked regardless of a valid token. The `/api` functions in this repo do nothing but forward your `Authorization` header untouched — they hold no secret and make no authorization decisions themselves; Foundry still checks your RBAC role exactly as if you'd called it directly. Static Web Apps' free tier bundles this API function at no extra cost and serves it same-origin, which is what avoids the CORS problem.
+Why a relay function at all, if it's your own token: Azure AI Foundry's data-plane endpoint doesn't return CORS headers for arbitrary browser origins, so a browser calling it directly gets blocked regardless of a valid token. The `/api` functions in this repo do nothing but forward your bearer token untouched — they hold no secret and make no authorization decisions themselves; Foundry still checks your RBAC role exactly as if you'd called it directly. Static Web Apps' free tier bundles this API function at no extra cost and serves it same-origin, which is what avoids the CORS problem.
+
+The frontend sends the token as `X-Foundry-Authorization`, not the standard `Authorization` header — Static Web Apps' managed Functions integration [silently overwrites `Authorization`](https://github.com/Azure/static-web-apps/issues/275) with its own internal platform token before your function code ever runs, so a real bearer token in that header never survives the hop.
 
 ## One-time setup (run these yourself in your Azure tenant)
 
